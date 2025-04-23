@@ -1,0 +1,445 @@
+{
+  "address": "4AC91QE69YPBKTPA2CMNsvAkEAmr7LNC6N7hevR8Ld6R",
+  "metadata": {
+    "name": "satoshi_arena",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "claim_reward",
+      "discriminator": [
+        149,
+        95,
+        181,
+        242,
+        94,
+        90,
+        158,
+        162
+      ],
+      "accounts": [
+        {
+          "name": "state_account",
+          "writable": true
+        },
+        {
+          "name": "claimer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vault_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  97,
+                  116,
+                  111,
+                  115,
+                  104,
+                  105,
+                  95,
+                  97,
+                  114,
+                  101,
+                  110,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "state_account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "claimer_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "global_state"
+        },
+        {
+          "name": "treasury_token_account",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "global_state",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "token_mint",
+          "type": "pubkey"
+        },
+        {
+          "name": "treasury",
+          "type": "pubkey"
+        },
+        {
+          "name": "treasury_cut_bps",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "initialize_game",
+      "discriminator": [
+        44,
+        62,
+        102,
+        247,
+        126,
+        208,
+        130,
+        215
+      ],
+      "accounts": [
+        {
+          "name": "state_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  97,
+                  116,
+                  111,
+                  115,
+                  104,
+                  105,
+                  95,
+                  97,
+                  114,
+                  101,
+                  110,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "creator_token_account",
+          "writable": true
+        },
+        {
+          "name": "vault_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "state_account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "total_health",
+          "type": "u8"
+        },
+        {
+          "name": "pool_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "join_game",
+      "discriminator": [
+        107,
+        112,
+        18,
+        38,
+        56,
+        173,
+        60,
+        128
+      ],
+      "accounts": [
+        {
+          "name": "player",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "player_token_account",
+          "writable": true
+        },
+        {
+          "name": "vault_token_account",
+          "writable": true
+        },
+        {
+          "name": "state_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "GameSessionHealth",
+      "discriminator": [
+        13,
+        173,
+        69,
+        16,
+        177,
+        214,
+        55,
+        245
+      ]
+    },
+    {
+      "name": "GlobalState",
+      "discriminator": [
+        163,
+        46,
+        74,
+        168,
+        216,
+        123,
+        133,
+        98
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "AlreadyInitialized",
+      "msg": "The project is already initialized."
+    },
+    {
+      "code": 6001,
+      "name": "NotInitialized",
+      "msg": "The project is not initialized."
+    },
+    {
+      "code": 6002,
+      "name": "NotTurn",
+      "msg": "Not your Turn"
+    },
+    {
+      "code": 6003,
+      "name": "TaskNotCompleted",
+      "msg": "The task is not completed."
+    },
+    {
+      "code": 6004,
+      "name": "NotAParticipant",
+      "msg": "The caller is not a participant."
+    },
+    {
+      "code": 6005,
+      "name": "Unauthorized",
+      "msg": "Unauthorized access."
+    },
+    {
+      "code": 6006,
+      "name": "AlreadyJoined",
+      "msg": "Game already has a player."
+    },
+    {
+      "code": 6007,
+      "name": "GameNotOver",
+      "msg": "Game is not over yet."
+    },
+    {
+      "code": 6008,
+      "name": "NotWinner",
+      "msg": "Only the winner can claim the reward."
+    }
+  ],
+  "types": [
+    {
+      "name": "GameSessionHealth",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "player",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "player_can_play",
+            "type": "bool"
+          },
+          {
+            "name": "creator_can_play",
+            "type": "bool"
+          },
+          {
+            "name": "total_health",
+            "type": "u32"
+          },
+          {
+            "name": "player_health",
+            "type": "u32"
+          },
+          {
+            "name": "creator_health",
+            "type": "u8"
+          },
+          {
+            "name": "player_action",
+            "type": {
+              "defined": {
+                "name": "PlayerAction"
+              }
+            }
+          },
+          {
+            "name": "creator_action",
+            "type": {
+              "defined": {
+                "name": "PlayerAction"
+              }
+            }
+          },
+          {
+            "name": "pool_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GlobalState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury_cut_bps",
+            "type": "u16"
+          },
+          {
+            "name": "is_initialized",
+            "type": "bool"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlayerAction",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "None"
+          },
+          {
+            "name": "Rock"
+          },
+          {
+            "name": "Paper"
+          },
+          {
+            "name": "Scissors"
+          }
+        ]
+      }
+    }
+  ]
+}

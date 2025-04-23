@@ -6,15 +6,13 @@ html,
 body,
 #root {
   height: 100%;
+  font-family: 'MedievalSharp', cursive;
 }
 
-.wallet-adapter-button-trigger {
-  background: rgb(100, 26, 230) !important;
-  border-radius: 8px !important;
-  padding-left: 16px !important;
-  padding-right: 16px !important;
+.cinzel {
+  font-family: 'Cinzel Decorative', serif;
 }
-.wallet-adapter-dropdown-list,
-.wallet-adapter-button {
-  font-family: inherit !important;
+
+.medieval {
+  font-family: 'MedievalSharp', cursive;
 }

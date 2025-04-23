@@ -1,6 +1,6 @@
 {
-  "name": "legacy-react-vite-tailwindtailwind-counter",
-  "description": "React + Vite + Tailwind + Anchor Counter program",
+  "name": "Satoshi Arena",
+  "description": "Wager BTC on Solana powered by Zeus network",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -17,22 +17,25 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "0.30.1",
-    "@solana/spl-token": "0.4.12",
+    "@pixi/react": "^8.0.0-beta.16",
+    "@solana/spl-token": "^0.4.12",
     "@solana/wallet-adapter-base": "0.9.24",
     "@solana/wallet-adapter-react": "0.15.36",
-    "@solana/wallet-adapter-react-ui": "0.9.36",
+    "@solana/wallet-adapter-react-ui": "^0.9.36",
     "@solana/web3.js": "1.98.0",
     "@tabler/icons-react": "^3.30.0",
-    "@tanstack/react-query": "^5.66.9",
     "daisyui": "^4.12.24",
     "jotai": "^2.12.1",
     "node-stdlib-browser": "^1.3.1",
+    "pixi.js": "^8.9.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.5.2",
     "react-router": "^7.2.0",
     "react-router-dom": "^7.2.0",
-    "tailwindcss": "^3.4.10"
+    "tailwindcss": "^3.4.10",
+    "url": "^0.11.4",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
