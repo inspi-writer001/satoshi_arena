@@ -1,4 +1,4 @@
-import { AnchorProvider, Program, Wallet } from '@coral-xyz/anchor'
+import { AnchorProvider, Program } from '@coral-xyz/anchor'
 import { Connection, PublicKey } from '@solana/web3.js'
 
 import idl from '../../anchor/target/idl/satoshi_arena.json'

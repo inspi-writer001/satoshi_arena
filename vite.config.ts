@@ -22,7 +22,6 @@ export default defineConfig({
             '@solana/wallet-adapter-react-ui',
           ],
           tabler: ['@tabler/icons-react'],
-          tanstack: ['@tanstack/react-query'],
         },
       },
     },

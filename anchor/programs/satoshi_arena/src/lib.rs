@@ -1,11 +1,12 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::sysvar::clock::Clock;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 mod errors;
 
 use errors::SatoshiError;
 
-declare_id!("4AC91QE69YPBKTPA2CMNsvAkEAmr7LNC6N7hevR8Ld6R");
+declare_id!("A3gFj48ggWberfYRJ5o9nT3yPYaXmcZrgg5VmSyxMFCS");
 
 #[program]
 pub mod satoshi_arena {
@@ -65,6 +66,7 @@ pub mod satoshi_arena {
         game.player_can_play = false;
         game.player_action = PlayerAction::None;
         game.creator_action = PlayerAction::None;
+        game.winner = None;
 
         Ok(())
     }
@@ -149,6 +151,118 @@ pub mod satoshi_arena {
             ),
             winner_amount,
         )?;
+
+        Ok(())
+    }
+
+    pub fn play_turn(ctx: Context<PlayTurn>, action: PlayerAction) -> Result<()> {
+        let game = &mut ctx.accounts.state_account;
+        let signer = ctx.accounts.signer.key();
+        let clock = Clock::get()?;
+
+        require!(
+            game.creator == signer || game.player == Some(signer),
+            SatoshiError::NotAParticipant
+        );
+
+        if game.creator == signer {
+            require!(
+                game.creator_action == PlayerAction::None,
+                SatoshiError::NotTurn
+            );
+            game.creator_action = action;
+            game.creator_can_play = false;
+        } else if game.player == Some(signer) {
+            require!(
+                game.player_action == PlayerAction::None,
+                SatoshiError::NotTurn
+            );
+            game.player_action = action;
+            game.player_can_play = false;
+        }
+
+        // Update last play timestamp
+        game.last_turn_timestamp = clock.unix_timestamp;
+
+        Ok(())
+    }
+
+    pub fn resolve_turn(ctx: Context<ResolveTurn>) -> Result<()> {
+        let game = &mut ctx.accounts.state_account;
+
+        require!(
+            game.creator_action != PlayerAction::None,
+            SatoshiError::IncompleteTurn
+        );
+        require!(
+            game.player_action != PlayerAction::None,
+            SatoshiError::IncompleteTurn
+        );
+
+        let creator_action = game.creator_action.clone();
+        let player_action = game.player_action.clone();
+
+        let result = match (creator_action, player_action) {
+            (PlayerAction::Rock, PlayerAction::Scissors)
+            | (PlayerAction::Scissors, PlayerAction::Paper)
+            | (PlayerAction::Paper, PlayerAction::Rock) => {
+                Some(game.player_health = game.player_health.saturating_sub(1))
+            }
+
+            (PlayerAction::Scissors, PlayerAction::Rock)
+            | (PlayerAction::Paper, PlayerAction::Scissors)
+            | (PlayerAction::Rock, PlayerAction::Paper) => {
+                Some(game.creator_health = game.creator_health.saturating_sub(1))
+            }
+
+            _ => None, // Draw
+        };
+
+        // Check for game over
+        if game.creator_health == 0 {
+            game.winner = Some(game.player.unwrap());
+        } else if game.player_health == 0 {
+            game.winner = Some(game.creator);
+        } else {
+            // Reset actions
+            game.creator_action = PlayerAction::None;
+            game.player_action = PlayerAction::None;
+            game.creator_can_play = true;
+            game.player_can_play = true;
+        }
+
+        Ok(())
+    }
+
+    pub fn force_resolve_if_timeout(ctx: Context<ResolveTurn>) -> Result<()> {
+        let game = &mut ctx.accounts.state_account;
+        let clock = Clock::get()?;
+        let now = clock.unix_timestamp;
+        let timeout_duration = 180; // 3 minutes
+
+        // Only proceed if it's been too long since last turn
+        require!(
+            now - game.last_turn_timestamp >= timeout_duration,
+            SatoshiError::NotTimedOut
+        );
+
+        // If one player hasn't played yet, the other wins the round
+        if game.creator_action != PlayerAction::None && game.player_action == PlayerAction::None {
+            game.player_health = game.player_health.saturating_sub(1);
+        } else if game.player_action != PlayerAction::None
+            && game.creator_action == PlayerAction::None
+        {
+            game.creator_health = game.creator_health.saturating_sub(1);
+        } else {
+            return Err(SatoshiError::InvalidForceResolve.into());
+        }
+
+        // Reset the round
+        game.creator_action = PlayerAction::None;
+        game.player_action = PlayerAction::None;
+        game.creator_can_play = true;
+        game.player_can_play = true;
+        game.last_turn_timestamp = now;
 
         Ok(())
     }
@@ -255,9 +369,25 @@ pub struct GameSessionHealth {
     pub total_health: u32,
     pub player_health: u32,
     pub creator_health: u8,
-    pub player_action: PlayerAction,
-    pub creator_action: PlayerAction,
+    player_action: PlayerAction,
+    creator_action: PlayerAction,
     pub pool_amount: u64,
+    pub winner: Option<Pubkey>,
+    pub last_turn_timestamp: i64,
+}
+
+#[derive(Accounts)]
+pub struct PlayTurn<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    #[account(mut)]
+    pub state_account: Account<'info, GameSessionHealth>,
+}
+
+#[derive(Accounts)]
+pub struct ResolveTurn<'info> {
+    #[account(mut)]
+    pub state_account: Account<'info, GameSessionHealth>,
 }
 
 #[account]
@@ -270,8 +400,8 @@ pub struct GlobalState {
     pub owner: Pubkey,         // Owner of the program
 }
 
-#[derive(Clone, AnchorSerialize, AnchorDeserialize, InitSpace)]
-enum PlayerAction {
+#[derive(Clone, AnchorSerialize, AnchorDeserialize, InitSpace, PartialEq)]
+pub enum PlayerAction {
     None,
     Rock,
     Paper,

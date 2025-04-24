@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/satoshi_arena.json`.
  */
 export type SatoshiArena = {
-  "address": "4AC91QE69YPBKTPA2CMNsvAkEAmr7LNC6N7hevR8Ld6R",
+  "address": "A3gFj48ggWberfYRJ5o9nT3yPYaXmcZrgg5VmSyxMFCS",
   "metadata": {
     "name": "satoshiArena",
     "version": "0.1.0",
@@ -78,6 +78,26 @@ export type SatoshiArena = {
         },
         {
           "name": "treasuryTokenAccount",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "forceResolveIfTimeout",
+      "discriminator": [
+        137,
+        42,
+        61,
+        236,
+        235,
+        87,
+        178,
+        1
+      ],
+      "accounts": [
+        {
+          "name": "stateAccount",
           "writable": true
         }
       ],
@@ -263,6 +283,60 @@ export type SatoshiArena = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "playTurn",
+      "discriminator": [
+        116,
+        200,
+        44,
+        67,
+        23,
+        228,
+        209,
+        99
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "stateAccount",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "action",
+          "type": {
+            "defined": {
+              "name": "playerAction"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "resolveTurn",
+      "discriminator": [
+        97,
+        96,
+        32,
+        80,
+        136,
+        41,
+        228,
+        44
+      ],
+      "accounts": [
+        {
+          "name": "stateAccount",
+          "writable": true
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -338,6 +412,21 @@ export type SatoshiArena = {
       "code": 6008,
       "name": "notWinner",
       "msg": "Only the winner can claim the reward."
+    },
+    {
+      "code": 6009,
+      "name": "incompleteTurn",
+      "msg": "Wait for other Player"
+    },
+    {
+      "code": 6010,
+      "name": "notTimedOut",
+      "msg": "Turn has not timed out yet."
+    },
+    {
+      "code": 6011,
+      "name": "invalidForceResolve",
+      "msg": "Invalid attempt to force resolve."
     }
   ],
   "types": [
@@ -395,6 +484,16 @@ export type SatoshiArena = {
           {
             "name": "poolAmount",
             "type": "u64"
+          },
+          {
+            "name": "winner",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "lastTurnTimestamp",
+            "type": "i64"
           }
         ]
       }

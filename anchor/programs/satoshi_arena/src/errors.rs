@@ -20,4 +20,10 @@ pub enum SatoshiError {
     GameNotOver,
     #[msg("Only the winner can claim the reward.")]
     NotWinner,
+    #[msg("Wait for other Player")]
+    IncompleteTurn,
+    #[msg("Turn has not timed out yet.")]
+    NotTimedOut,
+    #[msg("Invalid attempt to force resolve.")]
+    InvalidForceResolve,
 }

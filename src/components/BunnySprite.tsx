@@ -29,7 +29,7 @@ export const BunnySprite: React.FC<IBunnySprite> = ({ textures, playerMovement }
       ref={spriteRef}
       anchor={0.03}
       eventMode={'static'}
-      scale={0.6}
+      scale={0.8}
       animationSpeed={0.09}
       textures={textures} // ✔️ Ensure the right frames are rendered
       loop={playerMovement !== 'idle'}
@@ -38,8 +38,8 @@ export const BunnySprite: React.FC<IBunnySprite> = ({ textures, playerMovement }
           spriteRef.current.stop()
         }
       }}
-      x={20}
-      y={100}
+      x={200}
+      y={150}
     />
   )
 }
