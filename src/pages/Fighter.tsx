@@ -6,7 +6,7 @@ import { getProgram } from '@/utils/program'
 import { GameSession } from './Sessions'
 import bgImage from '/background/rps_bg_2.jpg'
 import { Progress } from '@/components/Progress'
-import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
+import { AccountInfo, Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { useWallet } from '@solana/wallet-adapter-react'
 
 interface IEntity {
@@ -85,6 +85,48 @@ const Fighter: FC = () => {
         return folder[0] || []
     }
   }
+
+  useEffect(() => {
+    const connection = program.provider.connection as Connection
+    const publicKey = new PublicKey(sessionPubKey)
+
+    const listenToSessionChanges = async () => {
+      const id = connection.onAccountChange(publicKey, (updatedAccountInfo: AccountInfo<Buffer>) => {
+        try {
+          const decoded = program.account.gameSessionHealth.coder.accounts.decode(
+            'gameSessionHealth',
+            updatedAccountInfo.data,
+          )
+          console.log('🔁 Real-time session update:', decoded)
+          setGameState(decoded as unknown as GameSession)
+
+          const total = Number((decoded.poolAmount * 2) / LAMPORTS_PER_SOL)
+          const creator = Number(decoded.poolAmount / LAMPORTS_PER_SOL || 0)
+          const player = Number(decoded.poolAmount / LAMPORTS_PER_SOL || 0)
+
+          setTotalPoolAmount(total)
+          setCreatorPool(creator)
+          setPlayerPool(player)
+        } catch (err) {
+          console.error('Error decoding real-time session update:', err)
+        }
+      })
+
+      return id
+    }
+
+    let subscriptionId: number
+
+    listenToSessionChanges().then((id) => {
+      subscriptionId = id
+    })
+
+    return () => {
+      if (subscriptionId !== undefined) {
+        connection.removeAccountChangeListener(subscriptionId)
+      }
+    }
+  }, [sessionPubKey])
 
   // ✅ Preload all images to prevent jank
 
@@ -183,8 +225,37 @@ const Fighter: FC = () => {
     return <div className="__loading_screen ...">Loading...</div>
   }
 
+  const handleResolveTurn = async (creatorWallet: PublicKey) => {
+    try {
+      const [pda_state_account, _bump] = PublicKey.findProgramAddressSync(
+        [Buffer.from('satoshi_arena'), creatorWallet.toBuffer()],
+        program.programId,
+      )
+
+      const tx = await program.methods
+        .resolveTurn() // <-- you can make this dynamic (e.g., { paper: {} })
+        .accounts({
+          stateAccount: pda_state_account,
+        })
+        .rpc()
+
+      console.log('Resolved turn with tx:', tx)
+      // Optional: Fetch session state or trigger UI update
+      const session = await fetchSession(sessionPubKey)
+      setGameState(session)
+    } catch (err) {
+      console.error('Resolve turn failed:', err)
+    }
+  }
+
   const handlePlayTurn = async (creatorWallet: PublicKey, action: typeof playerMovement) => {
     if (!wallet || !publicKey || !wallet.adapter.publicKey) return
+    await fetchSession(sessionPubKey)
+
+    if (!gameState.creatorCanPlay && !gameState.playerCanPlay) {
+      handleResolveTurn(creatorWallet)
+    }
+
     try {
       const [pda_state_account, _bump] = PublicKey.findProgramAddressSync(
         [Buffer.from('satoshi_arena'), creatorWallet.toBuffer()],
@@ -218,6 +289,55 @@ const Fighter: FC = () => {
     } catch (err) {
       console.error('Play turn failed:', err)
     }
+  }
+
+  const renderActionButtons = () => {
+    const isCreator = gameState.creator?.toBase58() === publicKey?.toBase58()
+    const isPlayer = gameState.player?.toBase58() === publicKey?.toBase58()
+
+    if (isCreator && gameState.creatorCanPlay) {
+      return renderMoveButtons()
+    }
+
+    if (isPlayer && gameState.playerCanPlay) {
+      return renderMoveButtons()
+    }
+
+    if (!gameState.creatorCanPlay && !gameState.playerCanPlay) {
+      return (
+        <div className="absolute bottom-8 w-full left-1/2 transform -translate-x-1/2 flex justify-center z-20">
+          <button
+            onClick={() => handleResolveTurn(gameState.creator)}
+            className="w-[80%] md:max-w-64  uppercase font-orbitron px-6 py-3 rounded-xl border-2 shadow-lg transition-all duration-150 text-[#E4E2DC]
+             bg-[#4d7c4c]/80 hover:bg-[#4d7c4c] border-[#D4AF37] hover:scale-105"
+          >
+            Resolve
+          </button>
+        </div>
+      )
+    }
+
+    return null
+  }
+
+  const renderMoveButtons = () => {
+    return (
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-6 z-10">
+        {['rock', 'paper', 'scissors'].map((action) => (
+          <button
+            key={action}
+            onClick={() => {
+              setPlayerMovement(action as typeof playerMovement)
+              handlePlayTurn(gameState.creator, action as typeof playerMovement)
+            }}
+            className="uppercase font-orbitron px-6 py-3 rounded-xl border-2 shadow-lg transition-all duration-150 text-[#E4E2DC]
+             bg-[#4d7c4c]/80 hover:bg-[#4d7c4c] border-[#D4AF37] hover:scale-105"
+          >
+            {action}
+          </button>
+        ))}
+      </div>
+    )
   }
 
   if (!gameState) {
@@ -301,31 +421,7 @@ const Fighter: FC = () => {
           </div>
         </div>
 
-        <div className="absolute bottom-8   left-1/2 transform -translate-x-1/2 flex gap-6 z-10">
-          {['rock', 'paper', 'scissors'].map((action) => (
-            <button
-              key={action}
-              onClick={() => {
-                setPlayerMovement(action as typeof playerMovement)
-
-                handlePlayTurn(gameState.creator, action as typeof playerMovement)
-              }}
-              className="uppercase font-orbitron px-6 py-3 rounded-xl border-2 shadow-lg transition-all duration-150 text-[#E4E2DC]
-                 bg-[#4d7c4c]/80 hover:bg-[#4d7c4c] border-[#D4AF37] hover:scale-105"
-            >
-              {action}
-            </button>
-          ))}
-        </div>
-        {/* <div className="absolute bottom-8 w-full left-1/2 transform -translate-x-1/2 flex justify-center z-20">
-          <button
-            key={'Resolve'}
-            className="w-[80%] md:max-w-64  uppercase font-orbitron px-6 py-3 rounded-xl border-2 shadow-lg transition-all duration-150 text-[#E4E2DC]
-                 bg-[#4d7c4c]/80 hover:bg-[#4d7c4c] border-[#D4AF37] hover:scale-105"
-          >
-            Resolve
-          </button>
-        </div> */}
+        {renderActionButtons()}
       </div>
     )
 }
