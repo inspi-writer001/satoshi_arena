@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/satoshi_arena.json`.
  */
 export type SatoshiArena = {
-  "address": "A3gFj48ggWberfYRJ5o9nT3yPYaXmcZrgg5VmSyxMFCS",
+  "address": "BnWSgutGqnvM2mrGU4m1wCDGdvofwkfJCT4K3pEe3jcG",
   "metadata": {
     "name": "satoshiArena",
     "version": "0.1.0",
@@ -43,19 +43,45 @@ export type SatoshiArena = {
               {
                 "kind": "const",
                 "value": [
-                  115,
+                  118,
                   97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "stateAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenMint"
+        },
+        {
+          "name": "vaultAuthority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
                   116,
-                  111,
-                  115,
-                  104,
-                  105,
                   95,
                   97,
+                  117,
+                  116,
+                  104,
+                  111,
                   114,
-                  101,
-                  110,
-                  97
+                  105,
+                  116,
+                  121
                 ]
               },
               {
@@ -70,15 +96,15 @@ export type SatoshiArena = {
           "writable": true
         },
         {
-          "name": "tokenProgram",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "name": "treasuryTokenAccount",
+          "writable": true
         },
         {
           "name": "globalState"
         },
         {
-          "name": "treasuryTokenAccount",
-          "writable": true
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": []
@@ -206,6 +232,37 @@ export type SatoshiArena = {
                   117,
                   108,
                   116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "stateAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vaultAuthority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
                 ]
               },
               {

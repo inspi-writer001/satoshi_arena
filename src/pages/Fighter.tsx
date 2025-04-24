@@ -2,12 +2,15 @@ import { Assets, Texture, Spritesheet, TextureSource } from 'pixi.js'
 import PixiBunny from '../components/PixiBunny'
 import { FC, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getProgram } from '@/utils/program'
+import { gameStore, getProgram, getProvider, tokenMint, treasury } from '@/utils/program'
 import { GameSession } from './Sessions'
 import bgImage from '/background/rps_bg_2.jpg'
 import { Progress } from '@/components/Progress'
 import { AccountInfo, Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { useWallet } from '@solana/wallet-adapter-react'
+import Confetti from 'react-confetti'
+import { useWindowSize } from 'react-use' // For full-screen confetti
+import { getOrCreateAssociatedTokenAccountWithProvider } from './CreateGameSession'
 
 interface IEntity {
   png: string
@@ -16,11 +19,11 @@ interface IEntity {
 
 const program = getProgram()
 
-const fetchSession = async (sessionPubKey: string) => {
+const fetchSession = async (sessionPubKey: string): Promise<GameSession> => {
   const session = await program.account.gameSessionHealth.fetch(sessionPubKey)
   console.log('Session:', session)
 
-  return session
+  return session as GameSession
 }
 
 const paper_sprite =
@@ -56,6 +59,7 @@ const Fighter: FC = () => {
   const [totalPoolAmount, setTotalPoolAmount] = useState<number>(0)
   const [creatorPool, setCreatorPool] = useState<number>(0)
   const [playerPool, setPlayerPool] = useState<number>(0)
+  const { width, height } = useWindowSize()
 
   const getSpriteImage = (
     movement: typeof playerMovement | typeof enemyMovement,
@@ -172,9 +176,9 @@ const Fighter: FC = () => {
         return Promise.all(assetsPromises)
       }
 
-      const total = Number((response.poolAmount * 2) / LAMPORTS_PER_SOL)
-      const creator = Number(response.poolAmount / LAMPORTS_PER_SOL || 0)
-      const player = Number(response.poolAmount / LAMPORTS_PER_SOL || 0)
+      const total = Number((Number(response.poolAmount) * 2) / LAMPORTS_PER_SOL)
+      const creator = Number(Number(response.poolAmount) / LAMPORTS_PER_SOL || 0)
+      const player = Number(Number(response.poolAmount) / LAMPORTS_PER_SOL || 0)
 
       setTotalPoolAmount(total)
       setCreatorPool(creator)
@@ -223,6 +227,52 @@ const Fighter: FC = () => {
   }, [])
   if (!gameState || !assetsLoaded) {
     return <div className="__loading_screen ...">Loading...</div>
+  }
+
+  const isWinner = gameState.winner && publicKey?.toBase58() === gameState.winner.toBase58()
+  const hasGameEnded = !!gameState.winner
+
+  const handleClaimReward = async (creatorWallet: PublicKey) => {
+    if (!wallet || !publicKey || !wallet.adapter.publicKey) return
+    try {
+      const [pda_state_account, _bump] = PublicKey.findProgramAddressSync(
+        [Buffer.from('satoshi_arena'), creatorWallet.toBuffer()],
+        program.programId,
+      )
+
+      const player_token_account = await getOrCreateAssociatedTokenAccountWithProvider(
+        getProvider(),
+        publicKey,
+        tokenMint,
+      )
+
+      const treasury_token_account = await getOrCreateAssociatedTokenAccountWithProvider(
+        getProvider(),
+        treasury,
+        tokenMint,
+      )
+      console.log(treasury.toBase58())
+      console.log(treasury_token_account.address.toBase58())
+
+      const tx = await program.methods
+        .claimReward() // <-- you can make this dynamic (e.g., { paper: {} })
+        .accounts({
+          stateAccount: pda_state_account,
+          claimerTokenAccount: player_token_account.address,
+          treasuryTokenAccount: treasury_token_account.address,
+          claimer: publicKey,
+          globalState: gameStore,
+          tokenMint: tokenMint,
+        })
+        .rpc()
+
+      console.log('Resolved turn with tx:', tx)
+      // Optional: Fetch session state or trigger UI update
+      const session = await fetchSession(sessionPubKey)
+      setGameState(session)
+    } catch (err) {
+      console.error('Resolve turn failed:', err)
+    }
   }
 
   const handleResolveTurn = async (creatorWallet: PublicKey) => {
@@ -368,24 +418,36 @@ const Fighter: FC = () => {
           </div>
         </div>
         {/* Creator Bars */}
-        <div className="absolute top-16 md:top-12 w-full  px-4 md:px-10 flex justify-between items-center z-10">
-          {/* Player Health */}
+        <div className="absolute top-16 md:top-12 w-full px-4 md:px-10 flex justify-between items-center z-10">
+          {/* Your Info */}
           <div className="flex flex-col items-start gap-2">
-            <span className="text-xs text-white/80 tracking-widest font-orbitron">PLAYER</span>
+            <span className="text-xs text-white/80 tracking-widest font-orbitron">YOU</span>
             <div className="w-40 bg-white/10 rounded-xl border border-purple-400/30 shadow-sm">
               <Progress
-                value={(gameState?.creatorHealth / gameState?.totalHealth) * 100}
+                value={
+                  ((publicKey?.toBase58() === gameState.creator.toBase58()
+                    ? gameState.creatorHealth
+                    : gameState.playerHealth) /
+                    gameState.totalHealth) *
+                  100
+                }
                 className="h-3 bg-purple-900/30 [&>*]:bg-purple-400"
               />
             </div>
           </div>
 
-          {/* Player Health */}
+          {/* Enemy Info */}
           <div className="flex flex-col items-end gap-2">
             <span className="text-xs text-white/80 tracking-widest font-orbitron">ENEMY</span>
             <div className="w-40 bg-white/10 rounded-xl border border-red-400/30 shadow-sm">
               <Progress
-                value={(gameState?.playerHealth / gameState?.totalHealth) * 100}
+                value={
+                  ((publicKey?.toBase58() === gameState.creator.toBase58()
+                    ? gameState.playerHealth
+                    : gameState.creatorHealth) /
+                    gameState.totalHealth) *
+                  100
+                }
                 className="h-3 bg-red-900/30 [&>*]:bg-red-400"
               />
             </div>
@@ -422,6 +484,36 @@ const Fighter: FC = () => {
         </div>
 
         {renderActionButtons()}
+        {hasGameEnded && (
+          <div className="fixed inset-0 bg-black/80 z-40 flex items-center justify-center flex-col space-y-6">
+            {isWinner ? (
+              <>
+                <Confetti width={width} height={height} />
+                <h1 className="text-4xl font-bold text-green-400 drop-shadow-lg font-orbitron">🎉 You Win! 🎉</h1>
+                <button
+                  onClick={() =>
+                    handleClaimReward(gameState.creator).then(() => {
+                      navigate('/sessions')
+                    })
+                  } // <- define this function
+                  className="px-6 py-3 text-lg font-semibold uppercase rounded-xl border-2 border-green-400 text-green-200 hover:bg-green-600/20 transition-all duration-150"
+                >
+                  Claim Reward
+                </button>
+              </>
+            ) : (
+              <>
+                <h1 className="text-4xl font-bold text-red-500 drop-shadow-lg font-orbitron">😔 You Lose</h1>
+                <button
+                  // onClick={handleExitGame} // <- define this function
+                  className="px-6 py-3 text-lg font-semibold uppercase rounded-xl border-2 border-red-400 text-red-200 hover:bg-red-600/20 transition-all duration-150"
+                >
+                  Exit Game
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
     )
 }

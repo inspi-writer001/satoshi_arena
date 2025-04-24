@@ -6,6 +6,9 @@ import { SatoshiArena } from '../../anchor/target/types/satoshi_arena'
 
 const programId = new PublicKey(idl.address)
 const tokenMint = new PublicKey('6mWfrWzYf5ot4S8Bti5SCDRnZWA5ABPH1SNkSq4mNN1C') //TODO change to Token Mint of zBTC
+let treasury = new PublicKey('6FJdcfzFHrV7LRsMaojS6aebeCW8RXoKtoyJQu5nN4ik') // TODO treasury for saving fees
+
+let gameStore = new PublicKey('6DEM8fzGwExBDS4KK7hxxDdS7t1mhs6hYRKxRHxuCGBF') // TODO this should change on every new programID
 
 export const getProvider = () => {
   const connection = new Connection('https://api.devnet.solana.com', 'confirmed')
@@ -24,4 +27,4 @@ export const getProgram = () => {
   return new Program<SatoshiArena>(idl as any, provider)
 }
 
-export { tokenMint, programId }
+export { tokenMint, programId, treasury, gameStore }

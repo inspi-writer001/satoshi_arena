@@ -170,6 +170,7 @@ export interface GameSession {
   playerAction: PlayerAction
   creatorAction: PlayerAction
   poolAmount: BigInt // hex string (e.g., "3b9aca00")
+  winner: PublicKey
 }
 
 export type PlayerAction = { none: {} } | { rock: {} } | { paper: {} } | { scissors: {} }

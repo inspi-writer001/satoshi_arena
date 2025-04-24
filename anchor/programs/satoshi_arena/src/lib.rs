@@ -6,7 +6,7 @@ mod errors;
 
 use errors::SatoshiError;
 
-declare_id!("A3gFj48ggWberfYRJ5o9nT3yPYaXmcZrgg5VmSyxMFCS");
+declare_id!("BnWSgutGqnvM2mrGU4m1wCDGdvofwkfJCT4K3pEe3jcG");
 
 #[program]
 pub mod satoshi_arena {
@@ -109,7 +109,6 @@ pub mod satoshi_arena {
         } else {
             return Err(SatoshiError::GameNotOver.into());
         };
-
         require!(
             winner == ctx.accounts.claimer.key(),
             SatoshiError::NotWinner
@@ -117,9 +116,9 @@ pub mod satoshi_arena {
 
         let total_pool = game.pool_amount * 2;
 
-        let bump = ctx.bumps.vault_token_account;
+        let bump = ctx.bumps.vault_authority;
         let account = ctx.accounts.state_account.key();
-        let vault_seeds = &[b"satoshi_arena".as_ref(), account.as_ref(), &[bump]];
+        let vault_seeds = &[b"vault_authority".as_ref(), account.as_ref(), &[bump]];
 
         let treasury_fee = total_pool * global_state.treasury_cut_bps as u64 / 10_000;
         let winner_amount = total_pool - treasury_fee;
@@ -131,7 +130,7 @@ pub mod satoshi_arena {
                 Transfer {
                     from: ctx.accounts.vault_token_account.to_account_info(),
                     to: ctx.accounts.treasury_token_account.to_account_info(),
-                    authority: ctx.accounts.vault_token_account.to_account_info(),
+                    authority: ctx.accounts.vault_authority.to_account_info(),
                 },
                 &[vault_seeds],
             ),
@@ -145,7 +144,7 @@ pub mod satoshi_arena {
                 Transfer {
                     from: ctx.accounts.vault_token_account.to_account_info(),
                     to: ctx.accounts.claimer_token_account.to_account_info(),
-                    authority: ctx.accounts.vault_token_account.to_account_info(),
+                    authority: ctx.accounts.vault_authority.to_account_info(),
                 },
                 &[vault_seeds],
             ),
@@ -270,7 +269,13 @@ pub mod satoshi_arena {
 
 #[derive(Accounts)]
 pub struct InitializeGame<'info> {
-    #[account(init, payer = signer, space = 8 + GameSessionHealth::INIT_SPACE, seeds=[b"satoshi_arena", signer.key().as_ref()], bump)]
+    #[account(
+        init,
+        payer = signer,
+        space = 8 + GameSessionHealth::INIT_SPACE,
+        seeds = [b"satoshi_arena", signer.key().as_ref()],
+        bump
+    )]
     pub state_account: Account<'info, GameSessionHealth>,
 
     #[account(mut)]
@@ -282,14 +287,23 @@ pub struct InitializeGame<'info> {
         seeds = [b"vault", state_account.key().as_ref()],
         bump,
         token::mint = token_mint,
-        token::authority = vault_token_account,
+        token::authority = vault_authority
     )]
     pub vault_token_account: Account<'info, TokenAccount>,
 
+    #[account(
+        seeds = [b"vault_authority", state_account.key().as_ref()],
+        bump
+    )]
+    /// CHECK: PDA that will own the vault_token_account
+    pub vault_authority: UncheckedAccount<'info>,
+
     pub token_mint: Account<'info, Mint>,
+
     #[account(mut)]
-    signer: Signer<'info>,
-    system_program: Program<'info, System>,
+    pub signer: Signer<'info>,
+
+    pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
 }
@@ -322,11 +336,20 @@ pub struct ClaimReward<'info> {
 
     #[account(
         mut,
-        seeds = [b"satoshi_arena", state_account.key().as_ref()],
+        seeds = [b"vault", state_account.key().as_ref()],
         bump
     )]
-    /// CHECK: This is a PDA that owns the tokens
-    pub vault_token_account: AccountInfo<'info>,
+    pub vault_token_account: Account<'info, TokenAccount>,
+
+    #[account(address = global_state.token_mint)]
+    pub token_mint: Account<'info, Mint>,
+
+    #[account(
+        seeds = [b"vault_authority", state_account.key().as_ref()],
+        bump
+    )]
+    /// CHECK: PDA that owns the vault token account
+    pub vault_authority: UncheckedAccount<'info>,
 
     #[account(
         mut,
@@ -334,18 +357,18 @@ pub struct ClaimReward<'info> {
     )]
     pub claimer_token_account: Account<'info, TokenAccount>,
 
-    pub token_program: Program<'info, Token>,
+    #[account(
+        mut,
+        constraint = treasury_token_account.owner == global_state.treasury,
+        constraint = treasury_token_account.mint == global_state.token_mint
+    )]
+    pub treasury_token_account: Account<'info, TokenAccount>,
 
     #[account(constraint = global_state.token_mint == claimer_token_account.mint)]
     pub global_state: Account<'info, GlobalState>,
-    #[account(
-    mut,
-    constraint = treasury_token_account.owner == global_state.treasury,
-    constraint = treasury_token_account.mint == global_state.token_mint
-)]
-    pub treasury_token_account: Account<'info, TokenAccount>,
-}
 
+    pub token_program: Program<'info, Token>,
+}
 #[derive(Accounts)]
 pub struct JoinGame<'info> {
     #[account(mut)]

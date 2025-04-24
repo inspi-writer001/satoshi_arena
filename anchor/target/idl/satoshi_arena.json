@@ -1,5 +1,5 @@
 {
-  "address": "A3gFj48ggWberfYRJ5o9nT3yPYaXmcZrgg5VmSyxMFCS",
+  "address": "BnWSgutGqnvM2mrGU4m1wCDGdvofwkfJCT4K3pEe3jcG",
   "metadata": {
     "name": "satoshi_arena",
     "version": "0.1.0",
@@ -37,19 +37,45 @@
               {
                 "kind": "const",
                 "value": [
-                  115,
+                  118,
                   97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "state_account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "vault_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
                   116,
-                  111,
-                  115,
-                  104,
-                  105,
                   95,
                   97,
+                  117,
+                  116,
+                  104,
+                  111,
                   114,
-                  101,
-                  110,
-                  97
+                  105,
+                  116,
+                  121
                 ]
               },
               {
@@ -64,15 +90,15 @@
           "writable": true
         },
         {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "name": "treasury_token_account",
+          "writable": true
         },
         {
           "name": "global_state"
         },
         {
-          "name": "treasury_token_account",
-          "writable": true
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": []
@@ -200,6 +226,37 @@
                   117,
                   108,
                   116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "state_account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
                 ]
               },
               {
