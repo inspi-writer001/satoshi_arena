@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/satoshi_arena.json`.
  */
 export type SatoshiArena = {
-  "address": "BnWSgutGqnvM2mrGU4m1wCDGdvofwkfJCT4K3pEe3jcG",
+  "address": "7YgWJi5MCbHDgswY46KA4zH48eotAtjb6V8uBDXfBGbb",
   "metadata": {
     "name": "satoshiArena",
     "version": "0.1.0",
@@ -105,6 +105,103 @@ export type SatoshiArena = {
         {
           "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "endSession",
+      "discriminator": [
+        11,
+        244,
+        61,
+        154,
+        212,
+        249,
+        15,
+        66
+      ],
+      "accounts": [
+        {
+          "name": "stateAccount",
+          "writable": true
+        },
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vaultTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "stateAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vaultAuthority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "stateAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "signerTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "otherPlayerTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "treasuryTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "globalState"
         }
       ],
       "args": []
@@ -484,6 +581,16 @@ export type SatoshiArena = {
       "code": 6011,
       "name": "invalidForceResolve",
       "msg": "Invalid attempt to force resolve."
+    },
+    {
+      "code": 6012,
+      "name": "rewardNotClaimed",
+      "msg": "Winner hasnt claimed Reward"
+    },
+    {
+      "code": 6013,
+      "name": "alreadyClaimed",
+      "msg": "Winner Already Claimed, account closed"
     }
   ],
   "types": [
@@ -551,6 +658,10 @@ export type SatoshiArena = {
           {
             "name": "lastTurnTimestamp",
             "type": "i64"
+          },
+          {
+            "name": "isClaimed",
+            "type": "bool"
           }
         ]
       }

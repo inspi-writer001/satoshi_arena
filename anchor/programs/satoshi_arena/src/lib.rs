@@ -6,7 +6,7 @@ mod errors;
 
 use errors::SatoshiError;
 
-declare_id!("BnWSgutGqnvM2mrGU4m1wCDGdvofwkfJCT4K3pEe3jcG");
+declare_id!("7YgWJi5MCbHDgswY46KA4zH48eotAtjb6V8uBDXfBGbb");
 
 #[program]
 pub mod satoshi_arena {
@@ -99,7 +99,7 @@ pub mod satoshi_arena {
     }
 
     pub fn claim_reward(ctx: Context<ClaimReward>) -> Result<()> {
-        let game = &ctx.accounts.state_account;
+        let game = &mut ctx.accounts.state_account;
         let global_state = &ctx.accounts.global_state;
 
         let winner = if game.creator_health == 0 {
@@ -117,7 +117,7 @@ pub mod satoshi_arena {
         let total_pool = game.pool_amount * 2;
 
         let bump = ctx.bumps.vault_authority;
-        let account = ctx.accounts.state_account.key();
+        let account = game.key();
         let vault_seeds = &[b"vault_authority".as_ref(), account.as_ref(), &[bump]];
 
         let treasury_fee = total_pool * global_state.treasury_cut_bps as u64 / 10_000;
@@ -150,6 +150,8 @@ pub mod satoshi_arena {
             ),
             winner_amount,
         )?;
+
+        game.is_claimed = true;
 
         Ok(())
     }
@@ -265,6 +267,91 @@ pub mod satoshi_arena {
 
         Ok(())
     }
+
+    pub fn end_session(ctx: Context<EndSession>) -> Result<()> {
+        let game = &mut ctx.accounts.state_account;
+        let signer_key = ctx.accounts.signer.key();
+        let vault = &ctx.accounts.vault_token_account;
+        let token_program = &ctx.accounts.token_program;
+        let vault_authority = &ctx.accounts.vault_authority;
+        // let global_state = &ctx.accounts.global_state;
+
+        // let total_pool = game.pool_amount * 2;
+        let bump = ctx.bumps.vault_authority;
+        let account_key = game.key();
+        let vault_seeds = &[b"vault_authority".as_ref(), account_key.as_ref(), &[bump]];
+
+        // If game is finished
+        if game.creator_health == 0 || game.player_health == 0 {
+            require!(!game.is_claimed, SatoshiError::AlreadyClaimed);
+            return Err(SatoshiError::RewardNotClaimed.into());
+        }
+
+        // Game not over, apply penalty
+        let signer_is_creator = signer_key == game.creator;
+        let other_player = if signer_is_creator {
+            game.player.ok_or(SatoshiError::IncompleteTurn)?
+        } else if Some(signer_key) == game.player {
+            game.creator
+        } else {
+            return Err(SatoshiError::Unauthorized.into());
+        };
+
+        // Calculate penalty and shares
+        let penalty = game.pool_amount * 40 / 100;
+        let half_penalty = penalty / 2;
+        let refund_to_leaver = game.pool_amount * 60 / 100;
+
+        // Transfer 50% of penalty to other player + their initial pool
+        token::transfer(
+            CpiContext::new_with_signer(
+                token_program.to_account_info(),
+                Transfer {
+                    from: vault.to_account_info(),
+                    to: ctx.accounts.other_player_token_account.to_account_info(),
+                    authority: vault_authority.to_account_info(),
+                },
+                &[vault_seeds],
+            ),
+            half_penalty + game.pool_amount,
+        )?;
+
+        // Transfer 50% of penalty to treasury
+        token::transfer(
+            CpiContext::new_with_signer(
+                token_program.to_account_info(),
+                Transfer {
+                    from: vault.to_account_info(),
+                    to: ctx.accounts.treasury_token_account.to_account_info(),
+                    authority: vault_authority.to_account_info(),
+                },
+                &[vault_seeds],
+            ),
+            half_penalty,
+        )?;
+
+        // Refund 60% to signer (the one quitting)
+        token::transfer(
+            CpiContext::new_with_signer(
+                token_program.to_account_info(),
+                Transfer {
+                    from: vault.to_account_info(),
+                    to: ctx.accounts.signer_token_account.to_account_info(),
+                    authority: vault_authority.to_account_info(),
+                },
+                &[vault_seeds],
+            ),
+            refund_to_leaver,
+        )?;
+
+        // Close the account to the signer
+        Account::<'_, GameSessionHealth>::close(
+            &ctx.accounts.state_account,
+            ctx.accounts.signer.to_account_info(),
+        )?;
+
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -328,7 +415,7 @@ pub struct UpdateGame<'info> {
 
 #[derive(Accounts)]
 pub struct ClaimReward<'info> {
-    #[account(mut)]
+    #[account(mut, close=claimer)]
     pub state_account: Account<'info, GameSessionHealth>,
 
     #[account(mut)]
@@ -382,6 +469,42 @@ pub struct JoinGame<'info> {
     pub token_program: Program<'info, Token>, // The token program for transferring tokens
 }
 
+#[derive(Accounts)]
+pub struct EndSession<'info> {
+    #[account(mut, close = signer)]
+    pub state_account: Account<'info, GameSessionHealth>,
+
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"vault", state_account.key().as_ref()],
+        bump
+    )]
+    pub vault_token_account: Account<'info, TokenAccount>,
+
+    #[account(
+        seeds = [b"vault_authority", state_account.key().as_ref()],
+        bump
+    )]
+    /// CHECK: PDA
+    pub vault_authority: UncheckedAccount<'info>,
+
+    #[account(mut)]
+    pub signer_token_account: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub other_player_token_account: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub treasury_token_account: Account<'info, TokenAccount>,
+
+    pub token_program: Program<'info, Token>,
+
+    pub global_state: Account<'info, GlobalState>,
+}
+
 #[account]
 #[derive(InitSpace)]
 pub struct GameSessionHealth {
@@ -397,6 +520,7 @@ pub struct GameSessionHealth {
     pub pool_amount: u64,
     pub winner: Option<Pubkey>,
     pub last_turn_timestamp: i64,
+    pub is_claimed: bool,
 }
 
 #[derive(Accounts)]

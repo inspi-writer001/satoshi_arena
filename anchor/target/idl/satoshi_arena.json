@@ -1,5 +1,5 @@
 {
-  "address": "BnWSgutGqnvM2mrGU4m1wCDGdvofwkfJCT4K3pEe3jcG",
+  "address": "7YgWJi5MCbHDgswY46KA4zH48eotAtjb6V8uBDXfBGbb",
   "metadata": {
     "name": "satoshi_arena",
     "version": "0.1.0",
@@ -99,6 +99,103 @@
         {
           "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "end_session",
+      "discriminator": [
+        11,
+        244,
+        61,
+        154,
+        212,
+        249,
+        15,
+        66
+      ],
+      "accounts": [
+        {
+          "name": "state_account",
+          "writable": true
+        },
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vault_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "state_account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "state_account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "signer_token_account",
+          "writable": true
+        },
+        {
+          "name": "other_player_token_account",
+          "writable": true
+        },
+        {
+          "name": "treasury_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "global_state"
         }
       ],
       "args": []
@@ -478,6 +575,16 @@
       "code": 6011,
       "name": "InvalidForceResolve",
       "msg": "Invalid attempt to force resolve."
+    },
+    {
+      "code": 6012,
+      "name": "RewardNotClaimed",
+      "msg": "Winner hasnt claimed Reward"
+    },
+    {
+      "code": 6013,
+      "name": "AlreadyClaimed",
+      "msg": "Winner Already Claimed, account closed"
     }
   ],
   "types": [
@@ -545,6 +652,10 @@
           {
             "name": "last_turn_timestamp",
             "type": "i64"
+          },
+          {
+            "name": "is_claimed",
+            "type": "bool"
           }
         ]
       }

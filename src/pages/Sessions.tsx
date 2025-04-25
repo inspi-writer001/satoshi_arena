@@ -44,6 +44,47 @@ export default function SessionsPage() {
     fetchSessions()
   }, [wallet])
 
+  useEffect(() => {
+    if (!wallet || !publicKey) return
+
+    const connection = program.provider.connection
+    let listenerId: number
+
+    const listenToGameSessions = async () => {
+      listenerId = await connection.onProgramAccountChange(
+        program.programId,
+        async (keyedAccountInfo) => {
+          try {
+            const decoded = program.account.gameSessionHealth.coder.accounts.decode(
+              'gameSessionHealth',
+              keyedAccountInfo.accountInfo.data,
+            )
+
+            console.log('🔁 Real-time session update:', decoded)
+
+            fetchSessions()
+          } catch (err) {
+            console.error('Error decoding session data:', err)
+          }
+        },
+        {
+          commitment: 'confirmed',
+          encoding: 'base64', // default if omitted; safe for borsh-encoded data
+          // Optional filter example:
+          // filters: [{ dataSize: 400 }] // You can add this if your accounts are fixed-size
+        },
+      )
+    }
+
+    listenToGameSessions()
+
+    return () => {
+      if (listenerId !== undefined) {
+        connection.removeProgramAccountChangeListener(listenerId)
+      }
+    }
+  }, [wallet, publicKey])
+
   const handleJoinGame = async (sessionPubkey: PublicKey, creatorWallet: PublicKey) => {
     if (!wallet || !publicKey || !wallet.adapter.publicKey) return
     try {

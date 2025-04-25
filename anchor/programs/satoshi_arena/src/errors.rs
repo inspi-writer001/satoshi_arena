@@ -26,4 +26,8 @@ pub enum SatoshiError {
     NotTimedOut,
     #[msg("Invalid attempt to force resolve.")]
     InvalidForceResolve,
+    #[msg("Winner hasnt claimed Reward")]
+    RewardNotClaimed,
+    #[msg("Winner Already Claimed, account closed")]
+    AlreadyClaimed,
 }
