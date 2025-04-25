@@ -45,6 +45,15 @@ pub mod satoshi_arena {
         let game = &mut ctx.accounts.state_account;
         let creator = &ctx.accounts.signer;
 
+        // Check if the state_account is already initialized and if it belongs to the creator
+        if game.creator != Pubkey::default() {
+            // If it's already initialized, ensure it is owned by the creator
+            require!(
+                game.creator == creator.key(),
+                SatoshiError::AlreadyInitialized // custom error if the account is already initialized
+            );
+        }
+
         // Transfer zBTC from creator to vault PDA
         token::transfer(
             CpiContext::new(
@@ -357,7 +366,7 @@ pub mod satoshi_arena {
 #[derive(Accounts)]
 pub struct InitializeGame<'info> {
     #[account(
-        init,
+        init_if_needed,
         payer = signer,
         space = 8 + GameSessionHealth::INIT_SPACE,
         seeds = [b"satoshi_arena", signer.key().as_ref()],
@@ -369,7 +378,7 @@ pub struct InitializeGame<'info> {
     pub creator_token_account: Account<'info, TokenAccount>,
 
     #[account(
-        init,
+        init_if_needed,
         payer = signer,
         seeds = [b"vault", state_account.key().as_ref()],
         bump,
