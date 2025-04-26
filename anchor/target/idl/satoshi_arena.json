@@ -656,6 +656,10 @@
           {
             "name": "is_claimed",
             "type": "bool"
+          },
+          {
+            "name": "is_resolved",
+            "type": "bool"
           }
         ]
       }

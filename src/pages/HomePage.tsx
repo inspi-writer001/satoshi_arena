@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
+import CreateGame from '/action_buttons/CreateGame.png'
+import JoinGame from '/action_buttons/JoinGame.png'
 
 import bgImage from '/background/rps_bg_1.jpg'
 import LoadingPage from './LoadingPage'
@@ -42,29 +44,29 @@ const HomePage = () => {
               <WalletMultiButton style={{ background: '#D4AF37' }} />
             </div>
 
-            <div className="space-y-6 md:space-x-6">
+            <div className="space-y-2 md:space-x-6">
               <button
                 disabled={!publicKey}
                 onClick={() => handleNavigate('/sessions')}
-                className={`text-3xl sm:text-4xl md:text-5xl pirata-one border px-8 py-4 rounded-xl transition duration-300 ease-in-out shadow-lg ${
+                className={`rounded-xl transition duration-300 ease-in-out shadow-lg ${
                   publicKey
                     ? 'text-[#D4AF37] border-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#2A1F1F] hover:shadow-[#D4AF37]/50'
-                    : 'text-gray-400 border-gray-400 cursor-not-allowed'
+                    : 'text-gray-400 cursor-not-allowed'
                 }`}
               >
-                Join Game Session
+                <img src={JoinGame} alt="JoinGame" className="w-52 md:w-72" />
               </button>
 
               <button
                 disabled={!publicKey}
                 onClick={() => handleNavigate('/create-session')}
-                className={`text-3xl sm:text-4xl md:text-5xl pirata-one border px-8 py-4 rounded-xl transition duration-300 ease-in-out shadow-lg ${
+                className={`rounded-xl transition duration-300 ease-in-out shadow-lg ${
                   publicKey
                     ? 'text-[#D4AF37] border-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#2A1F1F] hover:shadow-[#D4AF37]/50'
-                    : 'text-gray-400 border-gray-400 cursor-not-allowed'
+                    : 'text-gray-400 cursor-not-allowed'
                 }`}
               >
-                Create Game Session
+                <img src={CreateGame} alt="CreateGame" className="w-52 md:w-72" />
               </button>
             </div>
           </div>

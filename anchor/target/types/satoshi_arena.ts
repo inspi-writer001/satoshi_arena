@@ -662,6 +662,10 @@ export type SatoshiArena = {
           {
             "name": "isClaimed",
             "type": "bool"
+          },
+          {
+            "name": "isResolved",
+            "type": "bool"
           }
         ]
       }

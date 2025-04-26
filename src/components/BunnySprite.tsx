@@ -16,7 +16,7 @@ export const BunnySprite: React.FC<IBunnySprite> = ({ textures, playerMovement }
     const sprite = spriteRef.current
 
     if (prevMovement.current !== playerMovement) {
-      sprite.loop = playerMovement === 'idle'
+      // sprite.loop = playerMovement === 'idle'
       sprite.gotoAndPlay(0) // Restart animation
       prevMovement.current = playerMovement
 
@@ -32,12 +32,12 @@ export const BunnySprite: React.FC<IBunnySprite> = ({ textures, playerMovement }
       scale={0.8}
       animationSpeed={0.09}
       textures={textures} // ✔️ Ensure the right frames are rendered
-      loop={playerMovement !== 'idle'}
-      onComplete={() => {
-        if (spriteRef.current && playerMovement !== 'idle') {
-          spriteRef.current.stop()
-        }
-      }}
+      loop={false}
+      // onComplete={() => {
+      //   if (spriteRef.current && playerMovement !== 'idle') {
+      //     spriteRef.current.stop()
+      //   }
+      // }}
       x={200}
       y={150}
     />

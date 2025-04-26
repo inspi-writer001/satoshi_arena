@@ -50,8 +50,15 @@ pub mod satoshi_arena {
             // If it's already initialized, ensure it is owned by the creator
             require!(
                 game.creator == creator.key(),
-                SatoshiError::AlreadyInitialized // custom error if the account is already initialized
+                SatoshiError::AlreadyInitialized
             );
+        }
+
+        match game.player {
+            Some(_current_session) => {
+                panic!("{}", SatoshiError::AlreadyJoined);
+            }
+            None => {}
         }
 
         // Transfer zBTC from creator to vault PDA
@@ -176,20 +183,22 @@ pub mod satoshi_arena {
         );
 
         if game.creator == signer {
-            require!(
-                game.creator_action == PlayerAction::None,
-                SatoshiError::NotTurn
-            );
+            // require!(
+            //     game.creator_action == PlayerAction::None,
+            //     SatoshiError::NotTurn
+            // );
             game.creator_action = action;
             game.creator_can_play = false;
         } else if game.player == Some(signer) {
-            require!(
-                game.player_action == PlayerAction::None,
-                SatoshiError::NotTurn
-            );
+            // require!(
+            //     game.player_action == PlayerAction::None,
+            //     SatoshiError::NotTurn
+            // );
             game.player_action = action;
             game.player_can_play = false;
         }
+
+        game.is_resolved = false;
 
         // Update last play timestamp
         game.last_turn_timestamp = clock.unix_timestamp;
@@ -234,12 +243,14 @@ pub mod satoshi_arena {
         } else if game.player_health == 0 {
             game.winner = Some(game.creator);
         } else {
-            // Reset actions
-            game.creator_action = PlayerAction::None;
-            game.player_action = PlayerAction::None;
+            // // Reset actions
+            // game.creator_action = PlayerAction::None;
+            // game.player_action = PlayerAction::None;
             game.creator_can_play = true;
             game.player_can_play = true;
         }
+
+        game.is_resolved = true;
 
         Ok(())
     }
@@ -530,6 +541,7 @@ pub struct GameSessionHealth {
     pub winner: Option<Pubkey>,
     pub last_turn_timestamp: i64,
     pub is_claimed: bool,
+    pub is_resolved: bool,
 }
 
 #[derive(Accounts)]

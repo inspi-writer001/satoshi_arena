@@ -48,7 +48,7 @@ const Fighter: FC = () => {
   const { wallet, publicKey } = useWallet()
 
   const [playerMovement, setPlayerMovement] = useState<'idle' | 'rock' | 'paper' | 'scissors'>('idle')
-  const [enemyMovement, _setEnemyMovement] = useState<'idle' | 'rock' | 'paper' | 'scissors'>('paper')
+  const [enemyMovement, setEnemyMovement] = useState<'idle' | 'rock' | 'paper' | 'scissors'>('idle')
 
   const [characterTextures, setCharacterTextures] = useState<Texture<TextureSource<any>>[][]>()
 
@@ -111,6 +111,15 @@ const Fighter: FC = () => {
           setTotalPoolAmount(total)
           setCreatorPool(creator)
           setPlayerPool(player)
+          if (decoded.isResolved == true) {
+            if (decoded.creator.toBase58() == publicKey.toBase58()) {
+              setPlayerMovement(Object.keys(decoded.creatorAction)[0] as typeof playerMovement)
+              setEnemyMovement(Object.keys(decoded.playerAction)[0] as typeof enemyMovement)
+            } else {
+              setEnemyMovement(Object.keys(decoded.creatorAction)[0] as typeof enemyMovement)
+              setPlayerMovement(Object.keys(decoded.playerAction)[0] as typeof playerMovement)
+            }
+          }
         } catch (err) {
           console.error('Error decoding real-time session update:', err)
         }
@@ -276,6 +285,7 @@ const Fighter: FC = () => {
   }
 
   const handleResolveTurn = async (creatorWallet: PublicKey) => {
+    if (!wallet || !publicKey || !wallet.adapter.publicKey) return
     try {
       const [pda_state_account, _bump] = PublicKey.findProgramAddressSync(
         [Buffer.from('satoshi_arena'), creatorWallet.toBuffer()],
@@ -293,6 +303,14 @@ const Fighter: FC = () => {
       // Optional: Fetch session state or trigger UI update
       const session = await fetchSession(sessionPubKey)
       setGameState(session)
+
+      // if (session.creator.toBase58() == publicKey.toBase58()) {
+      //   setPlayerMovement(Object.keys(session.creatorAction)[0] as typeof playerMovement)
+      //   setEnemyMovement(Object.keys(session.playerAction)[0] as typeof enemyMovement)
+      // } else {
+      //   setPlayerMovement(Object.keys(session.playerAction)[0] as typeof enemyMovement)
+      //   setEnemyMovement(Object.keys(session.creatorAction)[0] as typeof playerMovement)
+      // }
     } catch (err) {
       console.error('Resolve turn failed:', err)
     }
@@ -357,7 +375,9 @@ const Fighter: FC = () => {
       return (
         <div className="absolute bottom-8 w-full left-1/2 transform -translate-x-1/2 flex justify-center z-20">
           <button
-            onClick={() => handleResolveTurn(gameState.creator)}
+            onClick={() => {
+              handleResolveTurn(gameState.creator)
+            }}
             className="w-[80%] md:max-w-64  uppercase font-orbitron px-6 py-3 rounded-xl border-2 shadow-lg transition-all duration-150 text-[#E4E2DC]
              bg-[#4d7c4c]/80 hover:bg-[#4d7c4c] border-[#D4AF37] hover:scale-105"
           >
@@ -377,7 +397,7 @@ const Fighter: FC = () => {
           <button
             key={action}
             onClick={() => {
-              setPlayerMovement(action as typeof playerMovement)
+              // setPlayerMovement(action as typeof playerMovement)
               handlePlayTurn(gameState.creator, action as typeof playerMovement)
             }}
             className="uppercase font-orbitron px-6 py-3 rounded-xl border-2 shadow-lg transition-all duration-150 text-[#E4E2DC]
@@ -458,14 +478,26 @@ const Fighter: FC = () => {
         <div className="w-full h-full  bg-[rgba(19,17,17,0.6)] max-w-screen-xl px-8 flex flex-col md:flex-row justify-between items-end pb-12 z-0 overflow-hidden">
           {/* mobile view  */}
           <div className="__right_fist w-full md:hidden rotate-180 transform translate-x-[26vw] -mt-20">
-            <PixiBunny key={'enemy'} textures={getSpriteImage(enemyMovement, 'enemy')} playerMovement={enemyMovement} />
+            <PixiBunny
+              key={'enemy'}
+              textures={
+                publicKey?.toBase58() == gameState.creator.toBase58()
+                  ? getSpriteImage(playerMovement, 'player')
+                  : getSpriteImage(enemyMovement, 'enemy')
+              }
+              playerMovement={publicKey?.toBase58() == gameState.creator.toBase58() ? playerMovement : enemyMovement}
+            />
           </div>
 
           <div className="__left_fist w-full relative md:hidden -translate-x-[26vw] -mt-36">
             <PixiBunny
               key={'player'}
-              textures={getSpriteImage(playerMovement, 'player')}
-              playerMovement={playerMovement}
+              textures={
+                publicKey?.toBase58() == gameState.creator.toBase58()
+                  ? getSpriteImage(enemyMovement, 'enemy')
+                  : getSpriteImage(playerMovement, 'player')
+              }
+              playerMovement={publicKey?.toBase58() == gameState.creator.toBase58() ? enemyMovement : playerMovement}
             />
           </div>
 
