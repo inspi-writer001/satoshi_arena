@@ -504,14 +504,26 @@ const Fighter: FC = () => {
           {/* Desktop view */}
           <div className="__left_fist md:w-[40%] w-full hidden md:flex">
             <PixiBunny
-              key={'player'}
-              textures={getSpriteImage(playerMovement, 'player')}
-              playerMovement={playerMovement}
+              key={'enemy'}
+              textures={
+                publicKey?.toBase58() == gameState.creator.toBase58()
+                  ? getSpriteImage(playerMovement, 'player')
+                  : getSpriteImage(enemyMovement, 'enemy')
+              }
+              playerMovement={publicKey?.toBase58() == gameState.creator.toBase58() ? playerMovement : enemyMovement}
             />
           </div>
 
           <div className="__right_fist w-[40%] hidden md:flex">
-            <PixiBunny key={'enemy'} textures={getSpriteImage(enemyMovement, 'enemy')} playerMovement={enemyMovement} />
+            <PixiBunny
+              key={'player'}
+              textures={
+                publicKey?.toBase58() == gameState.creator.toBase58()
+                  ? getSpriteImage(enemyMovement, 'enemy')
+                  : getSpriteImage(playerMovement, 'player')
+              }
+              playerMovement={publicKey?.toBase58() == gameState.creator.toBase58() ? enemyMovement : playerMovement}
+            />
           </div>
         </div>
 
