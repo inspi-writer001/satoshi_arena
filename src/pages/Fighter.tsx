@@ -1,10 +1,11 @@
 import { Assets, Texture, Spritesheet, TextureSource } from 'pixi.js'
 import PixiBunny from '../components/PixiBunny'
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { gameStore, getProgram, getProvider, tokenMint, treasury } from '@/utils/program'
 import { GameSession } from './Sessions'
-import bgImage from '/background/rps_bg_2.jpg'
+import bgImage from '/background/game_fight_scene.png'
+import bgVideo from '/background/game_fight_scene.mp4'
 import { Progress } from '@/components/Progress'
 import { AccountInfo, Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { useWallet } from '@solana/wallet-adapter-react'
@@ -44,6 +45,14 @@ const Fighter: FC = () => {
     navigate('/sessions')
     return
   }
+
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = 0.3
+    }
+  }, [])
 
   const { wallet, publicKey } = useWallet()
 
@@ -209,7 +218,7 @@ const Fighter: FC = () => {
           },
         ]).then((response) => {
           setCharacterTextures(response)
-          setAssetsLoaded(true)
+          // setAssetsLoaded(true)
         })
       }
 
@@ -264,7 +273,7 @@ const Fighter: FC = () => {
       console.log(treasury_token_account.address.toBase58())
 
       const tx = await program.methods
-        .claimReward() // <-- you can make this dynamic (e.g., { paper: {} })
+        .claimReward()
         .accounts({
           stateAccount: pda_state_account,
           claimerTokenAccount: player_token_account.address,
@@ -276,7 +285,7 @@ const Fighter: FC = () => {
         .rpc()
 
       console.log('Resolved turn with tx:', tx)
-      // Optional: Fetch session state or trigger UI update
+
       const session = await fetchSession(sessionPubKey)
       setGameState(session)
     } catch (err) {
@@ -293,24 +302,40 @@ const Fighter: FC = () => {
       )
 
       const tx = await program.methods
-        .resolveTurn() // <-- you can make this dynamic (e.g., { paper: {} })
+        .resolveTurn()
         .accounts({
           stateAccount: pda_state_account,
         })
         .rpc()
 
       console.log('Resolved turn with tx:', tx)
-      // Optional: Fetch session state or trigger UI update
+
       const session = await fetchSession(sessionPubKey)
       setGameState(session)
+    } catch (err) {
+      console.error('Resolve turn failed:', err)
+    }
+  }
 
-      // if (session.creator.toBase58() == publicKey.toBase58()) {
-      //   setPlayerMovement(Object.keys(session.creatorAction)[0] as typeof playerMovement)
-      //   setEnemyMovement(Object.keys(session.playerAction)[0] as typeof enemyMovement)
-      // } else {
-      //   setPlayerMovement(Object.keys(session.playerAction)[0] as typeof enemyMovement)
-      //   setEnemyMovement(Object.keys(session.creatorAction)[0] as typeof playerMovement)
-      // }
+  const handleForceResolve = async (creatorWallet: PublicKey) => {
+    if (!wallet || !publicKey || !wallet.adapter.publicKey) return
+    try {
+      const [pda_state_account, _bump] = PublicKey.findProgramAddressSync(
+        [Buffer.from('satoshi_arena'), creatorWallet.toBuffer()],
+        program.programId,
+      )
+
+      const tx = await program.methods
+        .forceResolveIfTimeout()
+        .accounts({
+          stateAccount: pda_state_account,
+        })
+        .rpc()
+
+      console.log('Resolved turn with tx:', tx)
+
+      const session = await fetchSession(sessionPubKey)
+      setGameState(session)
     } catch (err) {
       console.error('Resolve turn failed:', err)
     }
@@ -360,8 +385,13 @@ const Fighter: FC = () => {
   }
 
   const renderActionButtons = () => {
+    if (!wallet || !publicKey || !wallet.adapter.publicKey) return
     const isCreator = gameState.creator?.toBase58() === publicKey?.toBase58()
     const isPlayer = gameState.player?.toBase58() === publicKey?.toBase58()
+
+    if ((isCreator && !gameState.creatorCanPlay) || (isPlayer && !gameState.playerCanPlay)) {
+      return renderWaitingForOpponent()
+    }
 
     if (isCreator && gameState.creatorCanPlay) {
       return renderMoveButtons()
@@ -390,6 +420,30 @@ const Fighter: FC = () => {
     return null
   }
 
+  const renderWaitingForOpponent = () => {
+    if (!wallet || !publicKey || !wallet.adapter.publicKey) return
+    const lastTurn = Number(gameState.lastTurnTimestamp) * 1000 // convert to ms
+    const now = Date.now()
+    const canForceResolve = now - lastTurn > 60 * 1000 // 60 seconds
+
+    return (
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-wrap justify-center items-center gap-4 z-10 font-orbitron text-white">
+        <div className="md:text-left text-center">Waiting for opponent to play...</div>
+        <button
+          onClick={() => handleForceResolve(publicKey)}
+          disabled={!canForceResolve}
+          className={`uppercase font-orbitron px-6 py-3 rounded-xl border-2 shadow-lg transition-all duration-150 backdrop-blur-md ease-in-out text-nowrap ${
+            canForceResolve
+              ? 'text-[#E4E2DC] border-purple-400/30 bg-[#4d7c4c]/10 hover:bg-purple-900/30 hover:scale-105 hover:shadow-2xl cursor-pointer'
+              : 'text-gray-400 border-gray-500/30 bg-gray-800/30 cursor-not-allowed'
+          }`}
+        >
+          Force Resolve
+        </button>
+      </div>
+    )
+  }
+
   const renderMoveButtons = () => {
     return (
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-6 z-10">
@@ -400,8 +454,8 @@ const Fighter: FC = () => {
               // setPlayerMovement(action as typeof playerMovement)
               handlePlayTurn(gameState.creator, action as typeof playerMovement)
             }}
-            className="uppercase font-orbitron px-6 py-3 rounded-xl border-2 shadow-lg transition-all duration-150 text-[#E4E2DC]
-             bg-[#4d7c4c]/80 hover:bg-[#4d7c4c] border-[#D4AF37] hover:scale-105"
+            className="uppercase font-orbitron px-6 py-3 rounded-xl border-2 shadow-lg transition-all duration-150 text-[#E4E2DC] backdrop-blur-md border-purple-400/30 
+             bg-[#4d7c4c]/10 hover:bg-purple-900/30 [&>*]:bg-purple-400 hover:scale-105 hover:shadow-2xl  ease-in-out"
           >
             {action}
           </button>
@@ -418,10 +472,17 @@ const Fighter: FC = () => {
     )
   } else
     return (
-      <div
-        className="w-full h-full flex justify-center  items-center relative bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${bgImage})` }}
-      >
+      <div className="w-full h-full flex justify-center  items-center relative bg-cover bg-center bg-no-repeat">
+        <video
+          className="absolute top-0 left-0 w-full h-full object-cover"
+          src={bgVideo}
+          ref={videoRef}
+          autoPlay
+          // loop
+          muted
+          playsInline
+          poster={bgImage}
+        />
         <div className="absolute top-0 left-0 w-full px-4 md:px-10 py-4 flex justify-between text-ancient-scroll text-sm font-orbitron z-10">
           <div className="text-left font-bold">
             Total Pool: <span className="text-[#D4AF37]">zBTC{totalPoolAmount.toFixed(2)}</span>
@@ -549,7 +610,7 @@ const Fighter: FC = () => {
               <>
                 <h1 className="text-4xl font-bold text-red-500 drop-shadow-lg font-orbitron">😔 You Lose</h1>
                 <button
-                  // onClick={handleExitGame} // <- define this function
+                  onClick={() => navigate('/sessions')}
                   className="px-6 py-3 text-lg font-semibold uppercase rounded-xl border-2 border-red-400 text-red-200 hover:bg-red-600/20 transition-all duration-150"
                 >
                   Exit Game

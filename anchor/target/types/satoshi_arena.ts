@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/satoshi_arena.json`.
  */
 export type SatoshiArena = {
-  "address": "7YgWJi5MCbHDgswY46KA4zH48eotAtjb6V8uBDXfBGbb",
+  "address": "6KciRUF5bK2uuhLY587Fzn1Z3bUYjjCFSVWo7negrVA9",
   "metadata": {
     "name": "satoshiArena",
     "version": "0.1.0",

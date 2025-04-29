@@ -6,7 +6,7 @@ mod errors;
 
 use errors::SatoshiError;
 
-declare_id!("7YgWJi5MCbHDgswY46KA4zH48eotAtjb6V8uBDXfBGbb");
+declare_id!("6KciRUF5bK2uuhLY587Fzn1Z3bUYjjCFSVWo7negrVA9");
 
 #[program]
 pub mod satoshi_arena {
@@ -259,7 +259,7 @@ pub mod satoshi_arena {
         let game = &mut ctx.accounts.state_account;
         let clock = Clock::get()?;
         let now = clock.unix_timestamp;
-        let timeout_duration = 180; // 3 minutes
+        let timeout_duration = 60; // 1 minute
 
         // Only proceed if it's been too long since last turn
         require!(
@@ -278,12 +278,21 @@ pub mod satoshi_arena {
             return Err(SatoshiError::InvalidForceResolve.into());
         }
 
-        // Reset the round
-        game.creator_action = PlayerAction::None;
-        game.player_action = PlayerAction::None;
-        game.creator_can_play = true;
-        game.player_can_play = true;
+        // Check for game over
+        if game.creator_health == 0 {
+            game.winner = Some(game.player.unwrap());
+        } else if game.player_health == 0 {
+            game.winner = Some(game.creator);
+        } else {
+            // // Reset actions
+            // game.creator_action = PlayerAction::None;
+            // game.player_action = PlayerAction::None;
+            game.creator_can_play = true;
+            game.player_can_play = true;
+        }
+
         game.last_turn_timestamp = now;
+        game.is_resolved = true;
 
         Ok(())
     }

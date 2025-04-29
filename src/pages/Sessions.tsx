@@ -126,7 +126,7 @@ export default function SessionsPage() {
         backgroundImage: `url(${bgImage})`,
       }}
     >
-      <h1 className="text-3xl font-bold mb-8 text-white">🎰 Open Game Sessions</h1>
+      <h1 className="text-3xl font-bold mb-8 text-white">✌️ Open Game Sessions</h1>
 
       {loading && <p className="text-white">Loading...</p>}
       {sessions.length === 0 && !loading && <p className="text-gray-400">No open sessions found.</p>}
@@ -164,7 +164,7 @@ export default function SessionsPage() {
         ))}
       </div>
 
-      <h2 className="text-2xl font-semibold mt-10 mb-6 text-white">🧩 Your Active Sessions</h2>
+      <h2 className="text-2xl font-semibold mt-10 mb-6 text-white">✊ Your Active Sessions</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {allParticipatedSessions
@@ -230,6 +230,7 @@ export interface GameSession {
   creatorAction: PlayerAction
   poolAmount: BigInt // hex string (e.g., "3b9aca00")
   winner: PublicKey
+  lastTurnTimestamp: BigInt
 }
 
 export type PlayerAction = { none: {} } | { rock: {} } | { paper: {} } | { scissors: {} }

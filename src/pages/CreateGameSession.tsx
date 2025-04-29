@@ -54,10 +54,10 @@ const CreateGameSession = () => {
 
   return (
     <div
-      className="flex items-center relative justify-center w-full min-h-screen bg-cover bg-center bg-no-repeat text-[#E4E2DC]"
+      className="flex items-center relative justify-center  w-full min-h-screen bg-cover bg-center bg-no-repeat text-[#E4E2DC]"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
-      <img src={Board} className="absolute w-full md:max-w-xl" />
+      <img src={Board} className="absolute w-full p-2 md:max-w-xl" />
       <div className=" p-8 rounded-xl max-w-md w-full relative z-20">
         <div className="flex justify-end mb-6 absolute right-4 md:right-0 -mt-8 md:-mt-28">
           <WalletMultiButton

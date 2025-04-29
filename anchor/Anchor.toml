@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-satoshi_arena = "7YgWJi5MCbHDgswY46KA4zH48eotAtjb6V8uBDXfBGbb"
+satoshi_arena = "6KciRUF5bK2uuhLY587Fzn1Z3bUYjjCFSVWo7negrVA9"
 
 [registry]
 url = "https://api.apr.dev"
