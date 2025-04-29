@@ -1,5 +1,6 @@
 import { useEffect, useState, FC } from 'react'
 import '../styles/landing.css'
+import bgImage from '/background/satoshi_arena_bg.png'
 
 interface ILoadingPage {
   onLoaded: () => void
@@ -24,7 +25,12 @@ const LoadingPage: FC<ILoadingPage> = ({ onLoaded }) => {
   }, [onLoaded])
 
   return (
-    <div className="flex items-center justify-center w-full min-h-screen bg-gradient-to-b from-[#1c1a1a] to-[#3b2f2f] text-[#e4e2dc]">
+    <div
+      className="flex items-center justify-center w-full min-h-screen bg-gradient-to-b from-[#1c1a1a] to-[#3b2f2f] text-[#e4e2dc]"
+      style={{
+        backgroundImage: `url(${bgImage})`,
+      }}
+    >
       <div className="text-center animate-fade-in">
         <div className="text-5xl font-bold mb-4 cinzel glow text-[#D4AF37]">Satoshi's Arena</div>
         <div className="text-2xl font-medium mb-6 medieval tracking-wider text-[#4d7c4c]">Loading World...</div>

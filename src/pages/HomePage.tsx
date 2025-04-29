@@ -1,11 +1,13 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import CreateGame from '/action_buttons/CreateGame.png'
 import JoinGame from '/action_buttons/JoinGame.png'
 
-import bgImage from '/background/rps_bg_1.jpg'
+import bgImage from '/background/ree.jpg'
+import bgVideo from '/background/ree.mp4'
+// import bgImage from '/background/rps_bg_1.jpg'
 import LoadingPage from './LoadingPage'
 import { useGameStore } from '../store/GameStore'
 
@@ -14,6 +16,14 @@ const HomePage = () => {
   const navigate = useNavigate()
   const { publicKey, signMessage } = useWallet()
   const { setTransitionTrigger } = useGameStore()
+
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = 0.3
+    }
+  }, [])
 
   const handleNavigate = async (path: string) => {
     try {
@@ -39,6 +49,16 @@ const HomePage = () => {
           className="flex flex-col items-center justify-center h-screen w-screen text-[#E4E2DC] bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${bgImage})` }}
         >
+          <video
+            className="absolute top-0 left-0 w-full h-full object-cover"
+            src={bgVideo}
+            ref={videoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster={bgImage}
+          />
           <div className="flex relative flex-col justify-end w-full h-full pb-12 px-4 text-center bg-black bg-opacity-40">
             <div className="absolute top-10 right-10">
               <WalletMultiButton style={{ background: '#D4AF37' }} />
@@ -54,7 +74,7 @@ const HomePage = () => {
                     : 'text-gray-400 cursor-not-allowed'
                 }`}
               >
-                <img src={JoinGame} alt="JoinGame" className="w-52 md:w-72" />
+                <img src={JoinGame} alt="JoinGame" className="w-52 md:w-60" />
               </button>
 
               <button
@@ -66,7 +86,7 @@ const HomePage = () => {
                     : 'text-gray-400 cursor-not-allowed'
                 }`}
               >
-                <img src={CreateGame} alt="CreateGame" className="w-52 md:w-72" />
+                <img src={CreateGame} alt="CreateGame" className="w-52 md:w-60" />
               </button>
             </div>
           </div>
