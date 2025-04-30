@@ -20,7 +20,7 @@ export const BunnySprite: React.FC<IBunnySprite> = ({ textures, playerMovement }
       sprite.gotoAndPlay(0) // Restart animation
       prevMovement.current = playerMovement
 
-      console.log('✅ Movement changed:', playerMovement)
+      // console.log('✅ Movement changed:', playerMovement)
     }
   }, [playerMovement, textures])
 

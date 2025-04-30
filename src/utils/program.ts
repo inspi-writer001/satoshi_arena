@@ -8,7 +8,7 @@ const programId = new PublicKey(idl.address)
 const tokenMint = new PublicKey('6mWfrWzYf5ot4S8Bti5SCDRnZWA5ABPH1SNkSq4mNN1C') //TODO change to Token Mint of zBTC
 let treasury = new PublicKey('6FJdcfzFHrV7LRsMaojS6aebeCW8RXoKtoyJQu5nN4ik') // TODO treasury for saving fees
 
-let gameStore = new PublicKey('AuSqWLv1iDuvdrCpBjcXvxXLhrYeFtSUtNg8w6Z2VK9e') // TODO this should change on every new programID
+let gameStore = new PublicKey('E5hyZuNHMgnjAU4i98ohbB8GqTdJ9S7nrv8Q9voxhqwH') // TODO this should change on every new programID
 
 export const getProvider = () => {
   const connection = new Connection('https://api.devnet.solana.com', 'confirmed')

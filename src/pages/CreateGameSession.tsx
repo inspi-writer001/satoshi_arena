@@ -11,6 +11,7 @@ import { PublicKey, Transaction } from '@solana/web3.js'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import Board from '/background/MessageBoard.png'
 import CreateGame from '/action_buttons/CreateGame.png'
+import Zbtc from '@/icons/Zbtc'
 
 const CreateGameSession = () => {
   const [totalHealth, setTotalHealth] = useState(5)
@@ -32,7 +33,7 @@ const CreateGameSession = () => {
 
       const ata = await getOrCreateAssociatedTokenAccountWithProvider(provider, publicKey, tokenMint)
 
-      const tx = await program.methods
+      await program.methods
         .initializeGame(new anchor.BN(totalHealth), new anchor.BN(poolAmount * anchor.web3.LAMPORTS_PER_SOL))
         .accounts({
           creatorTokenAccount: ata.address,
@@ -42,7 +43,7 @@ const CreateGameSession = () => {
         .signers([])
         .rpc()
 
-      console.log('Game Created! TX:', tx)
+      // console.log('Game Created! TX:', tx)
       setTransitionTrigger(true)
       setTimeout(() => navigate('/sessions'), 500)
     } catch (error) {
@@ -83,7 +84,9 @@ const CreateGameSession = () => {
         </div>
 
         <div className="mb-6 md:p-0 px-3">
-          <label className="block mb-2 text-base font-semibold text-[#E4E2DC]">Pool Amount (zBTC)</label>
+          <label className="mb-2 text-base font-semibold text-[#E4E2DC] flex flex-row items-center">
+            Pool Amount <p className="mr-1" /> <Zbtc width="15px" /> zBTC
+          </label>
           <input
             type="number"
             value={poolAmount}

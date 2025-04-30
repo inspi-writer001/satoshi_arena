@@ -12,6 +12,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import Confetti from 'react-confetti'
 import { useWindowSize } from 'react-use' // For full-screen confetti
 import { getOrCreateAssociatedTokenAccountWithProvider } from './CreateGameSession'
+import Zbtc from '@/icons/Zbtc'
 
 interface IEntity {
   png: string
@@ -22,7 +23,7 @@ const program = getProgram()
 
 const fetchSession = async (sessionPubKey: string): Promise<GameSession> => {
   const session = await program.account.gameSessionHealth.fetch(sessionPubKey)
-  console.log('Session:', session)
+  // console.log('Session:', session)
 
   return session as GameSession
 }
@@ -75,13 +76,13 @@ const Fighter: FC = () => {
     type: 'player' | 'enemy',
   ): Texture[] => {
     if (!characterTextures || !enemyTextures) {
-      console.log('cant find assets')
+      // console.log('cant find assets')
       return []
     }
 
     const folder = type === 'player' ? characterTextures : enemyTextures
     if (!folder) {
-      console.log('no folders were provided')
+      // console.log('no folders were provided')
       return []
     }
 
@@ -110,7 +111,7 @@ const Fighter: FC = () => {
             'gameSessionHealth',
             updatedAccountInfo.data,
           )
-          console.log('🔁 Real-time session update:', decoded)
+          // console.log('🔁 Real-time session update:', decoded)
           setGameState(decoded as unknown as GameSession)
 
           const total = Number((decoded.poolAmount * 2) / LAMPORTS_PER_SOL)
@@ -154,7 +155,7 @@ const Fighter: FC = () => {
 
   useEffect(() => {
     fetchSession(sessionPubKey).then((response) => {
-      console.log('current session account: ', response)
+      // console.log('current session account: ', response)
       setGameState(response as unknown as GameSession)
       const preloadImages = async (urls: IEntity[]) => {
         const loadSpritesheet = async (entity: IEntity) => {
@@ -166,7 +167,7 @@ const Fighter: FC = () => {
               throw new Error("Invalid spritesheet: 'frames' key missing.")
             }
 
-            console.log('was able to get here')
+            // console.log('was able to get here')
 
             const texture = await Assets.load(entity.png)
 
@@ -269,10 +270,10 @@ const Fighter: FC = () => {
         treasury,
         tokenMint,
       )
-      console.log(treasury.toBase58())
-      console.log(treasury_token_account.address.toBase58())
+      // console.log(treasury.toBase58())
+      // console.log(treasury_token_account.address.toBase58())
 
-      const tx = await program.methods
+      await program.methods
         .claimReward()
         .accounts({
           stateAccount: pda_state_account,
@@ -284,7 +285,7 @@ const Fighter: FC = () => {
         })
         .rpc()
 
-      console.log('Resolved turn with tx:', tx)
+      // console.log('Resolved turn with tx:', tx)
 
       const session = await fetchSession(sessionPubKey)
       setGameState(session)
@@ -301,14 +302,14 @@ const Fighter: FC = () => {
         program.programId,
       )
 
-      const tx = await program.methods
+      await program.methods
         .resolveTurn()
         .accounts({
           stateAccount: pda_state_account,
         })
         .rpc()
 
-      console.log('Resolved turn with tx:', tx)
+      // console.log('Resolved turn with tx:', tx)
 
       const session = await fetchSession(sessionPubKey)
       setGameState(session)
@@ -325,14 +326,14 @@ const Fighter: FC = () => {
         program.programId,
       )
 
-      const tx = await program.methods
+      await program.methods
         .forceResolveIfTimeout()
         .accounts({
           stateAccount: pda_state_account,
         })
         .rpc()
 
-      console.log('Resolved turn with tx:', tx)
+      // console.log('Resolved turn with tx:', tx)
 
       const session = await fetchSession(sessionPubKey)
       setGameState(session)
@@ -367,7 +368,7 @@ const Fighter: FC = () => {
         action_condition = { idle: {} }
       }
 
-      const tx = await program.methods
+      await program.methods
         .playTurn(action_condition) // <-- you can make this dynamic (e.g., { paper: {} })
         .accounts({
           stateAccount: pda_state_account,
@@ -375,7 +376,7 @@ const Fighter: FC = () => {
         })
         .rpc()
 
-      console.log('Played turn with tx:', tx)
+      // console.log('Played turn with tx:', tx)
       // Optional: Fetch session state or trigger UI update
       const session = await fetchSession(sessionPubKey)
       setGameState(session)
@@ -388,10 +389,6 @@ const Fighter: FC = () => {
     if (!wallet || !publicKey || !wallet.adapter.publicKey) return
     const isCreator = gameState.creator?.toBase58() === publicKey?.toBase58()
     const isPlayer = gameState.player?.toBase58() === publicKey?.toBase58()
-
-    if ((isCreator && !gameState.creatorCanPlay) || (isPlayer && !gameState.playerCanPlay)) {
-      return renderWaitingForOpponent()
-    }
 
     if (isCreator && gameState.creatorCanPlay) {
       return renderMoveButtons()
@@ -408,13 +405,18 @@ const Fighter: FC = () => {
             onClick={() => {
               handleResolveTurn(gameState.creator)
             }}
-            className="w-[80%] md:max-w-64  uppercase font-orbitron px-6 py-3 rounded-xl border-2 shadow-lg transition-all duration-150 text-[#E4E2DC]
-             bg-[#4d7c4c]/80 hover:bg-[#4d7c4c] border-[#D4AF37] hover:scale-105"
+            className="w-[80%] md:max-w-64  uppercase font-orbitron px-6 py-3 rounded-xl border-2 shadow-lg 
+              transition-all duration-150 text-[#E4E2DC] backdrop-blur-md border-purple-400/30 
+             bg-[#4d7c4c]/10 hover:bg-purple-900/30 [&>*]:bg-purple-400 hover:scale-105 hover:shadow-2xl  ease-in-out"
           >
             Resolve
           </button>
         </div>
       )
+    }
+
+    if ((isCreator && !gameState.creatorCanPlay) || (isPlayer && !gameState.playerCanPlay)) {
+      return renderWaitingForOpponent()
     }
 
     return null
@@ -485,17 +487,22 @@ const Fighter: FC = () => {
         />
         <div className="absolute top-0 left-0 w-full px-4 md:px-10 py-4 flex justify-between text-ancient-scroll text-sm font-orbitron z-10">
           <div className="text-left font-bold">
-            Total Pool: <span className="text-[#D4AF37]">zBTC{totalPoolAmount.toFixed(2)}</span>
+            Total Pool:{' '}
+            <span className="text-[#D4AF37]">
+              zBTC{totalPoolAmount.toFixed(2)} <Zbtc width="15px" />
+            </span>
           </div>
           <div className="text-center ">
             {publicKey?.toBase58() === gameState.creator?.toBase58()
-              ? `Your Pool Amount: zBTC${creatorPool.toFixed(2)}`
-              : `Creator Pool: zBTC${creatorPool.toFixed(2)}`}
+              ? `Your Pool Amount:  zBTC${creatorPool.toFixed(2)}`
+              : `Creator Pool: zBTC${creatorPool.toFixed(2)}`}{' '}
+            <Zbtc width="15px" />
           </div>
           <div className="text-right ">
             {publicKey?.toBase58() === gameState.player?.toBase58()
               ? `Your Pool Amount: zBTC${playerPool.toFixed(2)}`
-              : `Player Pool: zBTC${playerPool.toFixed(2)}`}
+              : `Player Pool: zBTC${playerPool.toFixed(2)}`}{' '}
+            <Zbtc width="15px" />
           </div>
         </div>
         {/* Creator Bars */}

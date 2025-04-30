@@ -8,6 +8,7 @@ import { getOrCreateAssociatedTokenAccountWithProvider } from './CreateGameSessi
 import { useNavigate } from 'react-router'
 import { truncateBetween } from '@/utils/helpers'
 import bgImage from '/background/ree.jpg'
+import Zbtc from '@/icons/Zbtc'
 
 const program = getProgram()
 const provider = getProvider()
@@ -36,7 +37,7 @@ export default function SessionsPage() {
         session.account.player?.toBase58() === publicKey.toBase58(),
     )
 
-    console.log(openSessions)
+    // console.log(openSessions)
     setSessions(openSessions as unknown as Array<GameSessionRaw>)
     setAllParticipatedSessions(userSessions as unknown as Array<GameSessionRaw>)
   }
@@ -56,12 +57,12 @@ export default function SessionsPage() {
         program.programId,
         async (keyedAccountInfo) => {
           try {
-            const decoded = program.account.gameSessionHealth.coder.accounts.decode(
+            program.account.gameSessionHealth.coder.accounts.decode(
               'gameSessionHealth',
               keyedAccountInfo.accountInfo.data,
             )
 
-            console.log('🔁 Real-time session update:', decoded)
+            // console.log('🔁 Real-time session update:', decoded)
 
             fetchSessions()
           } catch (err) {
@@ -101,7 +102,7 @@ export default function SessionsPage() {
         program.programId,
       )
 
-      const tx = await program.methods
+      await program.methods
         .joinGame()
         .accounts({
           playerTokenAccount: tokenAccount.address,
@@ -111,7 +112,7 @@ export default function SessionsPage() {
         })
         .rpc()
 
-      console.log('Joined game with tx:', tx)
+      // console.log('Joined game with tx:', tx)
       navigate(`/session/${sessionPubkey}`)
       fetchSessions()
     } catch (err) {
@@ -144,8 +145,9 @@ export default function SessionsPage() {
               )}
             </p>
 
-            <p className="text-gray-300 mt-2">
-              🏆 Pool Amount: {Number(session.account.poolAmount) / LAMPORTS_PER_SOL} zBTC
+            <p className="text-gray-300 mt-2 flex flex-row items-center">
+              🏆 Pool Amount: {Number(session.account.poolAmount) / LAMPORTS_PER_SOL}
+              <p className="mr-1" /> <Zbtc width="15px" /> zBTC
             </p>
 
             <button
@@ -183,8 +185,9 @@ export default function SessionsPage() {
                 {session.account.creator.toBase58() === publicKey?.toBase58() ? 'the Creator' : 'a Player'}
               </p>
 
-              <p className="text-[#D4AF37] mt-2">
-                🏆 Pool Amount: {(Number(session.account.poolAmount) * 2) / LAMPORTS_PER_SOL} zBTC
+              <p className="text-[#D4AF37] mt-2 flex flex-row items-center">
+                🏆 Pool Amount: {(Number(session.account.poolAmount) * 2) / LAMPORTS_PER_SOL}
+                <p className="mr-1" /> <Zbtc width="15px" /> zBTC
               </p>
 
               <p className="text-teal-400 mt-2">Health: {session.account.totalHealth}</p>
