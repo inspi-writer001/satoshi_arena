@@ -22,7 +22,6 @@ const creatorWalletData = JSON.parse(fs.readFileSync(creatorWalletPath, 'utf-8')
 const playerWalletData = JSON.parse(fs.readFileSync(playerWalletPath, 'utf-8'))
 const gameStoreData = JSON.parse(fs.readFileSync(gameStorePath, 'utf-8'))
 const walletData = JSON.parse(fs.readFileSync(walletPath, 'utf-8'))
-// H4FUhFia8MQUxGVx9a346Ht4mpMi9HdcJDsN3W5LTtDQ
 
 const creatorSecretKey = new Uint8Array(creatorWalletData)
 const playerSecretKey = new Uint8Array(playerWalletData)
@@ -35,7 +34,7 @@ const player_wallet = anchor.web3.Keypair.fromSecretKey(playerSecretKey)
 const creator_wallet = anchor.web3.Keypair.fromSecretKey(creatorSecretKey)
 const game_store_wallet = anchor.web3.Keypair.fromSecretKey(gameStoreSecretKey)
 
-const token_mint = new anchor.web3.PublicKey('6mWfrWzYf5ot4S8Bti5SCDRnZWA5ABPH1SNkSq4mNN1C')
+const token_mint = new anchor.web3.PublicKey('6mWfrWzYf5ot4S8Bti5SCDRnZWA5ABPH1SNkSq4mNN1C') // demo zbtc address
 
 describe('satoshi_arena', () => {
   // Configure the client to use the local cluster.
@@ -74,7 +73,6 @@ describe('satoshi_arena', () => {
   )
 
   it('should initialize a game', async () => {
-    // Add your test here.
     try {
       let total_health = 1
       let pool_amount = 1 * anchor.web3.LAMPORTS_PER_SOL
@@ -95,9 +93,7 @@ describe('satoshi_arena', () => {
         .accounts({
           creatorTokenAccount: creator_token_account.address,
           tokenMint: token_mint.toBase58(),
-          // stateAccount: pda_state_account,
           signer: creator_wallet.publicKey,
-          // vaultTokenAccount: pda_vault_token,
         })
         .signers([creator_wallet])
         .rpc()
