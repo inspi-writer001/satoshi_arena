@@ -6,7 +6,7 @@ mod errors;
 
 use errors::SatoshiError;
 
-declare_id!("6KciRUF5bK2uuhLY587Fzn1Z3bUYjjCFSVWo7negrVA9");
+declare_id!("6d9xqT1rBVzjDp5Z4Yr2KYXvgeWxvXActcC3RW4XLswT");
 
 #[program]
 pub mod satoshi_arena {

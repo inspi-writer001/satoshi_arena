@@ -3,6 +3,15 @@
 This is an on-chain PvP strategy game where players battle in turn-based duels with
 @ZeusNetworkHQ zBTC pools✨
 
+## Setting yourself up for success 😄
+
+it is assumed the dev already has the necessary `anchor` and `solana cli` tools installed
+
+- cd to `/anchor` and you can find the necessary config in `Anchor.toml` like `cluster = "devnet"` and the programId in `satoshi_arena = "6KciRUF5bK2uuhLY587Fzn1Z3bUYjjCFSVWo7negrVA9"`
+- run `anchor build`
+- run `anchor deploy`
+- for the following test-required files `/anchor/tests/creator_wallet.json`, `/anchor/tests/game_store-keypair.json`, `/anchor/tests/player_wallet.json`, and `/anchor/tests/wallet.json` do `solana-keygen new -o /test/$(filename) --force` where file name is `creator_wallet.json`, `game_store-keypair.json`, etc respectively. 🚨 the `--force` flag is used o override any existing file with that exact same name
+
 ## Understanding the tests
 
 in the root folder, cd to `/anchor` and locate the `/tests` directory where you'll find the `basic.spec.ts` test file
@@ -24,6 +33,11 @@ Navigate to the root folder and locate the tests at:
 ```
 /anchor/tests/basic.spec.ts
 ```
+
+#### 🚨 Not immediately
+
+you'll have to run `anchor test --skip-build --skip-deploy` to run the tests here in his file
+for now, Please finmish reading the Readme, and come back when you're done. 👍️
 
 ## Test Overview
 
@@ -170,3 +184,5 @@ This test suite covers the lifecycle of a Satoshi Arena game instance:
 - Game resolution
 
 Each test validates the program logic and state transitions, providing confidence in the deployed contract’s integrity.
+
+### Now you can run `anchor test --skip-build --skip-deploy` happily 😁👍️
