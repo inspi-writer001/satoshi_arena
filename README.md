@@ -63,6 +63,14 @@ This test allows a creator to initialize a game session.
 - `tokenMint`: zBTC mint address.
 - `signer`: Creator’s wallet.
 
+#### on the frontend, the zBTC mint address are hardcoded in `/src/uils/program.ts` and
+
+```ts
+let gameStore = new PublicKey('E5hyZuNHMgnjAU4i98ohbB8GqTdJ9S7nrv8Q9voxhqwH') // this should change on every new programID
+```
+
+#### 🚨 should be changed to the address of the wallet at `/anchor/tests/game_store-keypair.json` which you would not store in plain sight, but for the purpose of this demo
+
 ### 3. **Joining the Game**
 
 ```ts
